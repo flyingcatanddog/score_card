@@ -1,0 +1,25 @@
+BEGIN
+
+SET @sep_date = '2017-04-01';
+DROP TABLE IF EXISTS RISK_FEATURES.zzr_model3_limit;
+CREATE TABLE RISK_FEATURES.zzr_model3_limit
+AS
+SELECT
+CAST(customer_id AS signed) AS customer_id,
+MIN(CASE WHEN DATEDIFF(finished_time,@sep_date)<0 THEN finished_time ELSE NULL END) AS first_limit_apply_time,
+MIN(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND audit_result_code=3 THEN finished_time ELSE NULL END) AS first_limit_improve_time,
+MAX(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND audit_result_code=3 THEN finished_time ELSE NULL END) AS last_limit_improve_time,
+MAX(CASE WHEN DATEDIFF(finished_time,@sep_date)<0 AND audit_result_code=3 THEN finished_time ELSE NULL END) AS last_limit_change_time,
+MAX(CASE WHEN final_grant_limit<current_grant_limit AND DATEDIFF(finished_time,@sep_date)<0 AND audit_result_code=3 THEN finished_time ELSE NULL END) AS last_limit_reduce_time,
+SUM(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND audit_result_code=3 THEN 1 ELSE NULL END) AS limit_improve_times,
+SUM(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND DATEDIFF(finished_time,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 AND audit_result_code=3 THEN 1 ELSE NULL END) AS limit_improve_times_last_3months,
+SUM(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND DATEDIFF(finished_time,DATE_SUB(@sep_date,INTERVAL 6 MONTH))>=0 AND audit_result_code=6 THEN 1 ELSE NULL END) AS limit_improve_times_last_6months,
+SUM(CASE WHEN final_grant_limit>current_grant_limit AND current_grant_limit>0 AND DATEDIFF(finished_time,@sep_date)<0 AND DATEDIFF(finished_time,DATE_SUB(@sep_date,INTERVAL 12 MONTH))>=0 AND audit_result_code=12 THEN 1 ELSE NULL END) AS limit_improve_times_last_12months,
+SUM(CASE WHEN DATEDIFF(finished_time,@sep_date)<0 THEN 1 ELSE NULL END) AS limit_apply_times,
+SUM(CASE WHEN DATEDIFF(finished_time,@sep_date)<0 AND DATEDIFF(finished_time,DATE_SUB(@sep_date,INTERVAL 6 MONTH))>=0 THEN 1 ELSE NULL END) AS limit_apply_times_last_6months,
+SUM(CASE WHEN DATEDIFF(finished_time,@sep_date)<0 AND DATEDIFF(finished_time,DATE_SUB(@sep_date,INTERVAL 6 MONTH))>=0 AND audit_result_code <>3 THEN 1 ELSE NULL END) AS limit_apply_failed_times_last_6months
+FROM 
+ODS_CMPROD.t_limit_adjust
+GROUP BY 1;
+
+END

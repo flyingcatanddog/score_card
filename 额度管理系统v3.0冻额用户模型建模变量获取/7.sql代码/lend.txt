@@ -1,0 +1,24 @@
+BEGIN
+
+SET @sep_date = '2017-04-01';
+DROP TABLE IF EXISTS RISK_FEATURES.zzr_model3_lend;
+CREATE TABLE RISK_FEATURES.zzr_model3_lend
+AS
+SELECT
+lLenderId,
+SUM(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 THEN lAmount ELSE NULL END) AS lend_total_amount,
+MAX(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 THEN lAmount ELSE NULL END) AS lend_max_amount,
+SUM(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_total_amount_last_3months,
+MAX(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_max_amount_last_3months,
+SUM(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_total_amount_last_6months,
+MAX(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_max_amount_last_6months,
+SUM(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_total_amount_last_9months,
+MAX(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_max_amount_last_9months,
+SUM(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_total_amount_last_12months,
+MAX(CASE WHEN DATEDIFF(strPurchaseDate,@sep_date)<0 AND DATEDIFF(strPurchaseDate,DATE_SUB(@sep_date,INTERVAL 3 MONTH))>=0 THEN lAmount ELSE NULL END) AS lend_max_amount_last_12months
+FROM
+ODS_LEND.tbLendIntent
+WHERE DATEDIFF(strPurchaseDate,@sep_date)<0
+GROUP BY lLenderId;
+
+END
